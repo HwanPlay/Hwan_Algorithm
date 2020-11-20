@@ -15,31 +15,22 @@ def solution(A):
   for idx in A:
     isUp[idx] = True
 
-    if isUp[idx-1] and isUp[idx+1]: # 좌우 버튼이 올라가 있음, 왼쪽 부모에 연결
+    if idx != len(A) and isUp[idx-1] and isUp[idx+1]:
       parent_node[idx] = find_parent_node(idx-1)
       parent_node[find_parent_node(idx+1)] = parent_node[idx]
-      if isOn[find_parent_node(idx-1)]: #왼쪽이 켜져있음        
+      if isOn[find_parent_node(idx-1)]:     
         isOn[idx] = True   
         result.append(idx)
-      # elif isOn[idx+1]: #오른쪽 이 켜져있음
-      #   parent_node[idx] = find_parent_node(idx+1)
-      #   parent_node[find_parent_node(idx-1)] = parent_node[idx]
 
-    elif isUp[idx-1]: # 좌 버튼이 올라가 있음
+    elif isUp[idx-1]: 
       parent_node[idx] = find_parent_node(idx-1)
-      if isOn[find_parent_node(idx-1)]: #왼쪽이 켜져있음
+      if isOn[find_parent_node(idx-1)]: 
         isOn[idx] = True
         result.append(idx)
-    elif idx != len(A) and isUp[idx+1]: # 우 버튼이 올라가 있음
+    elif idx != len(A) and isUp[idx+1]: 
       parent_node[idx] = find_parent_node(idx+1)
-      # if isOn[idx+1]: # 오른이 켜져있음
-      #   isOn[idx] = True
-    else: # 둘다 안올라감
+    else:
       parent_node[idx] = idx
-    print(isOn)
-    print(parent_node)
-    # if isOnBefore[idx-1]:
-    #   isOnBefore[idx] = True
-    return len(result)
+  print(len(result))
 
-solution([2, 1, 3, 5, 4])
+solution([1,3,4,2,5])
