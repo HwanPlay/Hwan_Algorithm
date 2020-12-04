@@ -24,12 +24,9 @@ def rotate_send(arr):
 
 for i in range(3):
     rotate_send(send_sand)
-# print(send_sand)
 
 N = int(input())
 arr = [list(map(int, input().split())) for _ in range(N)]
-
-# print(arr)
 
 x, y = N//2, N//2
 check_arr = [[False]*N for _ in range(N)]
@@ -54,6 +51,7 @@ def move_tornado(arr, x, y, direction):
         for j in range(-2,3):
             nx, ny = x+i, y+j
             percent = send_sand[direction][i+2][j+2]
+            if not percent: continue
             if percent != -1:
                 tmp_sand = (percent * sand) // 100
                 total_sand += tmp_sand
@@ -64,16 +62,10 @@ def move_tornado(arr, x, y, direction):
             else:
                 rx,ry = nx, ny
 
-    if 0<=nx<N and 0<=ny<N:
+    if 0<=rx<N and 0<=ry<N:
         arr[rx][ry] += sand - total_sand
     else:
         removed_sand += sand - total_sand
-
-    # if 0<=x+dx[direction]<N and 0<=y+dy[direction]<N:
-    #     arr[x+dx[direction]][y+dy[direction]] += sand - tmp
-    # for i in arr:
-    #     print(i)
-    # print(tmp)
 
     return x,y,removed_sand
 
