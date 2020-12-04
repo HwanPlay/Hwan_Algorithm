@@ -1,110 +1,89 @@
 import sys
 sys.stdin = open('input.txt', 'r')
-from collections import deque
 
-N, Q = map(int, input().split())
-# R, C = 2 ** N
-RC = 2 ** N
-cal_arr = [[[0]*RC for _ in range(RC)] for _ in range(2*Q)]
-# 단계, R, C
-arr = [list(map(int, input().split())) for _ in range(RC)]
-# 0은 회전, 1은 얼음 제거
-# arr에서 cal_arr로 처음에 회전된 값을 넣는다.
-arr_Q = list(map(int, input().split()))
+# L,D,R,U
+dx = [0, 1, 0, -1]
+dy = [-1, 0, 1, 0]
 
-
-def move_ratate(prev, next, s_x, s_y, Q_step):
-    for i in range(Q_step):
-        for j in range(Q_step):
-            next[s_x+j%Q_step][s_y-i+Q_step-1] = prev[s_x+i][s_y+j]
-
-
-def rotate(prev_arr, next_arr, Q_level):
-    Q_step = 2 ** Q_level
-    length = len(prev_arr)
-    for i in range(0, length, Q_step):
-        for j in range(0, length, Q_step):
-            move_ratate(prev_arr, next_arr, i, j, Q_step)
-
-
-# -1 => 0 회전, 0 => 1 제거, 1=>2 회전,
-dx = [0, 0, -1, 1]
-dy = [1, -1, 0, 0]
-
-def remove_ice(prev, next, isFinal):
-    n = len(prev)
-    if isFinal:
-        Q = deque()
+send_sand = [
+    [[0,0,2,0,0],
+    [0,10,7,1,0],
+    [5,-1,0,0,0],
+    [0,10,7,1,0],
+    [0,0,2,0,0]],
+]
+def rotate_send(arr):
+    n = 5
+    last = arr[-1]
+    tmp_arr = [[0]*n for _ in range(n)]
     for i in range(n):
         for j in range(n):
-            if not prev[i][j]: continue
-            num_ice = 0
-            for k in range(4):
-                nx = i + dx[k]
-                ny = j + dy[k]
-                if not (0<=nx<n and 0<=ny<n): continue
-                if prev[nx][ny]>0: num_ice += 1
-            if num_ice >= 3:  # and prev[i][j] > 0:
-                next[i][j] = prev[i][j]
+            tmp_arr[n-1-j][i] = last[i][j]
+    arr.append(tmp_arr)
+
+
+for i in range(3):
+    rotate_send(send_sand)
+# print(send_sand)
+
+N = int(input())
+arr = [list(map(int, input().split())) for _ in range(N)]
+
+# print(arr)
+
+x, y = N//2, N//2
+check_arr = [[False]*N for _ in range(N)]
+check_arr[x][y] = True
+direction = 0
+
+
+def make_dir(arr, x, y, direction):
+    nx, ny = x+dx[(direction+1)%4], y+dy[(direction+1)%4]
+    if not (0<=nx<N and 0<=ny<N) or not arr[nx][ny]:
+        return (direction + 1)%4
+    return direction
+
+
+def move_tornado(arr, x, y, direction):
+    x, y = x+dx[direction], y+dy[direction]
+    rx,ry = -1, -1
+    removed_sand = 0
+    total_sand = 0
+    sand = arr[x][y]
+    for i in range(-2,3):
+        for j in range(-2,3):
+            nx, ny = x+i, y+j
+            percent = send_sand[direction][i+2][j+2]
+            if percent != -1:
+                tmp_sand = (percent * sand) // 100
+                total_sand += tmp_sand
+                if 0<=nx<N and 0<=ny<N:
+                    arr[nx][ny] += tmp_sand
+                else:
+                    removed_sand += tmp_sand
             else:
-                next[i][j] = prev[i][j] - 1
-            if isFinal:
-                Q.append([i, j])
-    if isFinal:
-        return Q
+                rx,ry = nx, ny
+
+    if 0<=nx<N and 0<=ny<N:
+        arr[rx][ry] += sand - total_sand
     else:
-        return 0
+        removed_sand += sand - total_sand
 
-
-for idx in range(Q):
-    if idx == 0:
-        rotate(arr, cal_arr[0], arr_Q[idx])
-    else:
-        rotate(cal_arr[idx*2-1], cal_arr[idx*2], arr_Q[idx])
-
-    # print('회전')
-    # for i in cal_arr[idx*2]:
+    # if 0<=x+dx[direction]<N and 0<=y+dy[direction]<N:
+    #     arr[x+dx[direction]][y+dy[direction]] += sand - tmp
+    # for i in arr:
     #     print(i)
-    # 제거
-    # print('제거')
-    isFinal = True if idx == Q-1 else False
-    Que = remove_ice(cal_arr[idx*2], cal_arr[idx*2+1], isFinal)
+    # print(tmp)
 
-    # for i in cal_arr[idx*2+1]:
-    #     print(i)
+    return x,y,removed_sand
 
+result = 0
+for idx in range(N**2-1):
+    if idx:
+        direction = make_dir(check_arr, x, y, direction)
 
-def bfs(arr, Q, N):
-    # print(arr)
-    num_max = 0
-    check_arr = [[False]*N for _ in range(N)]
-    while Q:
-        x, y = Q.popleft()
-        if arr[x][y] and check_arr[x][y]: continue
-        new_Q = deque()
-        new_Q.append([x,y])
-        tmp = 0
-        while new_Q:
-            tx, ty = new_Q.popleft()
-            for i in range(4):
-                nx, ny = tx+dx[i], ty+dy[i]
-                if not (0<=nx<N and 0<=ny<N): continue
-                if arr[nx][ny] and not check_arr[nx][ny]:
-                    check_arr[nx][ny] = True
-                    new_Q.append([nx, ny])
-                    tmp += 1
+    x,y,tmp= move_tornado(arr, x, y, direction)
+    check_arr[x][y] = True
+    result += tmp
 
-        if tmp > num_max:
-            num_max = tmp
-    return num_max
-
-def sum_arr(arr):
-    result = 0
-    for i in range(len(arr)):
-        for j in range(len(arr)):
-            result += arr[i][j]
-    return result
-
-print(sum_arr(cal_arr[-1]))
-# print(sum(cal_arr[-1][:]))
-print(bfs(cal_arr[-1], Que, RC))
+print(result)
